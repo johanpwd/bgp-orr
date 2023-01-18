@@ -1,0 +1,89 @@
+hostname rr
+logging console disable
+cdp
+line console
+ exec-timeout 0 0
+ absolute-timeout 0
+ session-timeout 0
+!
+line default
+ exec-timeout 0 0
+ absolute-timeout 0
+ session-timeout 0
+!
+interface Loopback0
+ ipv4 address 10.13.37.255 255.255.255.255
+!
+interface MgmtEth0/0/CPU0/0
+ shutdown
+!
+interface GigabitEthernet0/0/0/0
+ description Link-p2
+ cdp
+ ipv4 point-to-point
+ ipv4 unnumbered Loopback0
+ no shutdown
+!
+interface GigabitEthernet0/0/0/1
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ shutdown
+!
+router isis LAB
+ set-overload-bit
+ is-type level-2-only
+ net 49.0000.0100.1303.7255.00
+ address-family ipv4 unicast
+  metric-style wide
+  metric 10
+  router-id Loopback0
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  point-to-point
+  address-family ipv4 unicast
+  !
+ !
+!
+router bgp 65534
+ bgp router-id 10.13.37.255
+ address-family ipv4 unicast
+ !
+ session-group iBGP
+  remote-as 65534
+  timers 10 32
+  update-source Loopback0
+ !
+ neighbor-group RR-CLIENTS
+  use session-group iBGP
+  address-family ipv4 unicast
+   route-reflector-client
+  !
+ !
+ neighbor 10.13.37.1
+  use neighbor-group RR-CLIENTS
+  description cr1
+ !
+ neighbor 10.13.37.2
+  use neighbor-group RR-CLIENTS
+  description cr2
+ !
+ neighbor 10.13.37.5
+  use neighbor-group RR-CLIENTS
+  description pe1
+ !
+ neighbor 10.13.37.6
+  use neighbor-group RR-CLIENTS
+  description pe2
+ !
+ neighbor 10.13.37.7
+  use neighbor-group RR-CLIENTS
+  description pe3
+ !
+!
+end
